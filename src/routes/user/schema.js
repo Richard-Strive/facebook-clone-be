@@ -22,6 +22,10 @@ const UserSchema = new Schema({
   password: {
     type: String,
   },
+  bio: {
+    type: String,
+  },
+  jobs: [String],
   birthDay: {
     type: String,
   },
@@ -34,6 +38,7 @@ const UserSchema = new Schema({
   pfImage: {
     type: String,
   },
+  friends: [],
   faceRec: {
     type: String,
   },
