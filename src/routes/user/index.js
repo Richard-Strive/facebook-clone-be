@@ -93,13 +93,28 @@ route.post("/post/:userId", authorize, async (req, res, next) => {
 });
 
 // DELETE POST ON SPECIFIC USER ARRAY
-route.post("/post/:userId", authorize, async (req, res, next) => {
+route.delete("/post/:userId/:postId", authorize, async (req, res, next) => {
   try {
     // 1 DELETE POST FROM POSTS COLLECTION
+    const post = await Post.findByIdAndDelete(req.params.postId);
 
     // 2 DELETE POST FROM ARRAY
+    const user = await User.findByIdAndUpdate(
+      req.params.userId,
+      {
+        $pull: {
+          posts: {
+            $elemMatch: { _id: mongoose.Types.ObjectId(req.params.postId) },
+          },
+        },
+      },
+      {
+        useFindAndModify: false,
+        new: true,
+      }
+    );
 
-    res.status(201).send(user);
+    res.status(201).send("delete");
   } catch (error) {
     console.log(error);
     next(error);
