@@ -11,7 +11,7 @@ const authorize = async (req, res, next) => {
 
     const user = await User.findOne({
       _id: decoded._id,
-    });
+    }).populate("posts");
 
     req.token = token;
     req.user = user;

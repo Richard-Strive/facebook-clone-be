@@ -8,6 +8,7 @@ const { authorize } = require("../../tools/middleware");
 const User = require("./schema");
 const Comment = require("../comment/schema");
 const Post = require("../post/schema");
+const { findByIdAndUpdate } = require("./schema");
 
 const route = express.Router();
 
@@ -50,6 +51,7 @@ route.get("/me", authorize, async (req, res, next) => {
   }
 });
 
+// FIND USER ON THE APP
 route.get("/finduser", authorize, async (req, res, next) => {
   try {
     const foundUser = await User.findOne({
@@ -67,62 +69,70 @@ route.get("/finduser", authorize, async (req, res, next) => {
   }
 });
 
-route.post("/post/:id", authorize, async (req, res, next) => {
+// ADD POST ON SPECIFIC USER ARRAY
+route.post("/post/:userId", authorize, async (req, res, next) => {
   try {
-    const user = await User.findOneAndUpdate(
-      req.params.id,
+    const post = new Post(req.body);
+    await post.save();
+    const user = await User.findByIdAndUpdate(
+      req.params.userId,
       {
-        $addToSet: { posts: new Post(req.body) },
+        $addToSet: { posts: post._id },
       },
       {
         useFindAndModify: false,
         new: true,
       }
     );
-
     console.log(user);
     res.status(201).send(user);
   } catch (error) {
     console.log(error);
+    next(error);
   }
 });
 
-//1 grab user id
-//2 grab post id
-//3 grab like array and add one obj that contains {userRef} on FE
-route.post("/like-post/:id", authorize, async (req, res, next) => {
+// DELETE POST ON SPECIFIC USER ARRAY
+route.post("/post/:userId", authorize, async (req, res, next) => {
   try {
-    const post = { ...req.body, userRef: "Richard" };
-    const newPost = new Post(post);
-    // await newPost.save();
+    // 1 DELETE POST FROM POSTS COLLECTION
 
-    const user = await User.findOneAndUpdate(
-      req.params.id,
-      {
-        $addToSet: { posts: newPost },
-      },
-      {
-        useFindAndModify: false,
-        new: true,
-      }
-    );
+    // 2 DELETE POST FROM ARRAY
 
-    console.log(user);
     res.status(201).send(user);
   } catch (error) {
     console.log(error);
+    next(error);
   }
 });
-route.post("/post/:id", authorize, async (req, res, next) => {
-  try {
-    const post = { ...req.body, userRef: "Richard" };
-    const newPost = new Post(post);
-    // await newPost.save();
 
-    const user = await User.findOneAndUpdate(
-      req.params.id,
+// ADD COMMENT ON SPECIFIC POST
+route.post("/addcomment/:postId", authorize, async (req, res, next) => {
+  try {
+    const comment = await Post.findByIdAndUpdate(
+      req.params.postId,
       {
-        $addToSet: { posts: newPost },
+        $addToSet: { comments: req.body },
+      },
+      {
+        useFindAndModify: false,
+        new: true,
+      }
+    );
+    res.status(201).send(comment);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
+
+// ADD LIKES ON SPECIFIC POST
+route.post("/addlikes/:postId", authorize, async (req, res, next) => {
+  try {
+    const like = await Post.findByIdAndUpdate(
+      req.params.postId,
+      {
+        $addToSet: { likes: req.body },
       },
       {
         useFindAndModify: false,
@@ -130,8 +140,7 @@ route.post("/post/:id", authorize, async (req, res, next) => {
       }
     );
 
-    console.log(user);
-    res.status(201).send(user);
+    res.status(201).send(like);
   } catch (error) {
     console.log(error);
   }

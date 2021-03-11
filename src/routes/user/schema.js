@@ -42,7 +42,12 @@ const UserSchema = new Schema({
   faceRec: {
     type: String,
   },
-  posts: [],
+  posts: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Post",
+    },
+  ],
   socketId: {
     type: String,
   },

@@ -8,10 +8,6 @@ const CommentSchema = new Schema({
     type: String,
     required: true,
   },
-  image: {
-    type: String,
-  },
-  likes: [],
 });
 
 module.exports = model("Comment", CommentSchema);
