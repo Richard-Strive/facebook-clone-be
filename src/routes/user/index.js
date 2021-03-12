@@ -3,22 +3,22 @@ const mongoose = require("mongoose");
 const { authenticate, refreshToken } = require("../../tools/auth");
 const { authorize } = require("../../tools/middleware");
 const cloudinary = require("cloudinary").v2;
+const multer = require("multer");
+const uniqid = require("uniqid");
 
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const express = require("express");
-const multer = require("multer");
 
 // LOOK ON THE DOCUMENTATION FOR GIVING DYNAMIC FILENAME
-// const storage = new CloudinaryStorage({
-//   cloudinary: cloudinary,
-//   params: {
-//     folder: "some-folder-name",
-//     format: async (req, file) => "png", // supports promises as well
-//     public_id: (req, file) => "computed-filename-using-request",
-//   },
-// });
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "facebook",
+    format: async (req, file) => "png" || "jpg", // supports promises as well
+    public_id: (req, file) => file.originalname,
+  },
+});
 
-// TO DO IF USER DID NOT UPLOAD A PROFILE PIC OR A BACKGROUND IMAGE THE SERVE WOULD ADD A DEFAULT ONE
+const parser = multer({ storage: storage });
 
 const User = require("./schema");
 const Comment = require("../comment/schema");
@@ -27,9 +27,26 @@ const { findByIdAndUpdate } = require("./schema");
 
 const route = express.Router();
 
+route.post(
+  "/upload/image",
+  authorize,
+  parser.single("image"),
+  function (req, res) {
+    console.log(req.file);
+    res.send(req.file.path);
+  }
+);
+// REGISTRATION
 route.post("/registration", async (req, res, next) => {
   try {
-    const newUser = new User(req.body);
+    const theNewUser = {
+      ...req.body,
+      pfImage:
+        "https://crestedcranesolutions.com/wp-content/uploads/2013/07/facebook-profile-picture-no-pic-avatar.jpg",
+      bgImage: "https://cdn.hipwallpaper.com/i/47/15/E8PQD3.jpg",
+    };
+
+    const newUser = new User(theNewUser);
 
     await newUser.save();
 
@@ -40,6 +57,7 @@ route.post("/registration", async (req, res, next) => {
   }
 });
 
+// LOGIN
 route.post("/login", async (req, res, next) => {
   try {
     const { lastName, password } = req.body;
@@ -58,6 +76,7 @@ route.post("/login", async (req, res, next) => {
   }
 });
 
+// PERSONAL PROFILE INFOS
 route.get("/me", authorize, async (req, res, next) => {
   try {
     res.status(200).send(req.user);
@@ -65,6 +84,58 @@ route.get("/me", authorize, async (req, res, next) => {
     console.log(error);
   }
 });
+
+// SET PROFILE IMAGE
+route.put(
+  "/me/add-profile-image",
+  parser.single("image"),
+  authorize,
+  async (req, res, next) => {
+    try {
+      const modifiedUser = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+          pfImage: req.file.path,
+        },
+        {
+          useFindAndModify: false,
+          new: true,
+        }
+      );
+
+      modifiedUser.save();
+      res.status(200).send(modifiedUser);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+);
+
+// SET BACKGROUND IMAGE
+route.put(
+  "/me/add-background-image",
+  parser.single("image"),
+  authorize,
+  async (req, res, next) => {
+    try {
+      const modifiedUser = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+          bgImage: req.file.path,
+        },
+        {
+          useFindAndModify: false,
+          new: true,
+        }
+      );
+
+      modifiedUser.save();
+      res.status(200).send(modifiedUser);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+);
 
 // FIND USER ON THE APP
 route.get("/finduser", authorize, async (req, res, next) => {
