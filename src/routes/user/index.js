@@ -103,9 +103,7 @@ route.delete("/post/:userId/:postId", authorize, async (req, res, next) => {
       req.params.userId,
       {
         $pull: {
-          posts: {
-            $elemMatch: { _id: mongoose.Types.ObjectId(req.params.postId) },
-          },
+          posts: mongoose.Types.ObjectId(req.params.postId),
         },
       },
       {
@@ -114,7 +112,7 @@ route.delete("/post/:userId/:postId", authorize, async (req, res, next) => {
       }
     );
 
-    res.status(201).send("delete");
+    res.status(201).send("deleted");
   } catch (error) {
     console.log(error);
     next(error);
