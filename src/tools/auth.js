@@ -60,13 +60,20 @@ const authenticate = async (user) => {
 };
 
 const refreshToken = async (oldRefreshToken) => {
+  /**
+   * 1 Verify the validity of inser refresh token and decoded it
+   *  remeber the decoded it's simply an object that contains the user id (line 87):
+   *"{ _id: '6048bcf0e734512e4727fa4a', iat: 1615503722, exp: 1616108522 }"
+   */
   const decoded = await verifyRefreshToken(oldRefreshToken);
 
+  //  2 Find in the db the user that has the specific id
   const user = await User.findOne({ _id: decoded._id });
-
   if (!user) {
     throw new Error(`Access is forbidden`);
   }
+
+  // 3 Find if in the user refreshToken array there is a token that's equal to the oldRefreshToken
   const currentRefreshToken = user.refreshTokens.find(
     (t) => t.token === oldRefreshToken
   );
@@ -78,6 +85,11 @@ const refreshToken = async (oldRefreshToken) => {
   const newAccessToken = await generateJWT({ _id: user._id });
   const newRefreshToken = await generateRefreshJWT({ _id: user._id });
 
+  /*
+  4 Replace the oldRefreshToken with the new one
+    - create a new array without the old token
+    - copy the new array values in the user refresh tokens array
+   */
   const newRefreshTokens = user.refreshTokens
     .filter((t) => t.token !== oldRefreshToken)
     .concat({ token: newRefreshToken });

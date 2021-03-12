@@ -1,7 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const { authenticate } = require("../../tools/auth");
+const { authenticate, refreshToken } = require("../../tools/auth");
 const { authorize } = require("../../tools/middleware");
+const cloudinary = require("cloudinary").v2;
 
 // TO DO IF USER DID NOT UPLOAD A PROFILE PIC OR A BACKGROUND IMAGE THE SERVE WOULD ADD A DEFAULT ONE
 
@@ -157,6 +158,28 @@ route.post("/addlikes/:postId", authorize, async (req, res, next) => {
   } catch (error) {
     console.log(error);
   }
+});
+
+//REFRASH TOKEN ROUTE
+route.post("/refreshToken", async (req, res, next) => {
+  // const oldRefreshToken = req.body.refreshToken;
+
+  console.log(req.cookies);
+  // if (!oldRefreshToken) {
+  //   const err = new Error("Refresh token missing");
+  //   err.httpStatusCode = 400;
+  //   next(err);
+  // } else {
+  try {
+    // const newTokens = await refreshToken(oldRefreshToken);
+    // res.send(newTokens);
+  } catch (error) {
+    console.log(error);
+    const err = new Error(error);
+    err.httpStatusCode = 403;
+    next(err);
+  }
+  // }
 });
 
 module.exports = route;
