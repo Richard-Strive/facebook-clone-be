@@ -4,6 +4,20 @@ const { authenticate, refreshToken } = require("../../tools/auth");
 const { authorize } = require("../../tools/middleware");
 const cloudinary = require("cloudinary").v2;
 
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const express = require("express");
+const multer = require("multer");
+
+// LOOK ON THE DOCUMENTATION FOR GIVING DYNAMIC FILENAME
+// const storage = new CloudinaryStorage({
+//   cloudinary: cloudinary,
+//   params: {
+//     folder: "some-folder-name",
+//     format: async (req, file) => "png", // supports promises as well
+//     public_id: (req, file) => "computed-filename-using-request",
+//   },
+// });
+
 // TO DO IF USER DID NOT UPLOAD A PROFILE PIC OR A BACKGROUND IMAGE THE SERVE WOULD ADD A DEFAULT ONE
 
 const User = require("./schema");
