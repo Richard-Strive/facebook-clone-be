@@ -27,15 +27,6 @@ const { findByIdAndUpdate } = require("./schema");
 
 const route = express.Router();
 
-route.post(
-  "/upload/image",
-  authorize,
-  parser.single("image"),
-  function (req, res) {
-    console.log(req.file);
-    res.send(req.file.path);
-  }
-);
 // REGISTRATION
 route.post("/registration", async (req, res, next) => {
   try {
@@ -155,28 +146,60 @@ route.get("/finduser", authorize, async (req, res, next) => {
   }
 });
 
-// ADD POST ON SPECIFIC USER ARRAY
-route.post("/post/:userId", authorize, async (req, res, next) => {
+// FRIEND REQUEST ROUTE
+route.get("/friend-request/:receiverId", authorize, async (req, res, next) => {
   try {
-    const post = new Post(req.body);
-    await post.save();
     const user = await User.findByIdAndUpdate(
-      req.params.userId,
+      req.params.receiverId,
       {
-        $addToSet: { posts: post._id },
+        $addToSet: { friendRequest: req.user._id },
       },
       {
         useFindAndModify: false,
         new: true,
       }
     );
-    console.log(user);
-    res.status(201).send(user);
   } catch (error) {
     console.log(error);
-    next(error);
   }
 });
+
+// FRIEND ACCEPT REQUEST ROUTE
+// route.get("/friend-accept/", authorize, async (req, res, next) => {
+//   try {
+//   } catch (error) {
+//     console.log(error);
+//   }
+// });
+
+// ADD POST ON SPECIFIC USER ARRAY
+route.post(
+  "/post/:userId",
+  parser.single("image"),
+  authorize,
+  async (req, res, next) => {
+    try {
+      const theNewPost = { ...req.body, image: req.file.path };
+      const post = new Post(theNewPost);
+      await post.save();
+      const user = await User.findByIdAndUpdate(
+        req.params.userId,
+        {
+          $addToSet: { posts: post._id },
+        },
+        {
+          useFindAndModify: false,
+          new: true,
+        }
+      );
+      console.log(user);
+      res.status(201).send(user);
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+);
 
 // DELETE POST ON SPECIFIC USER ARRAY
 route.delete("/post/:userId/:postId", authorize, async (req, res, next) => {

@@ -5,14 +5,12 @@ const { Schema, model } = require("mongoose");
 const PostSchema = new Schema({
   userRef: {
     type: String,
-    required: true,
   },
   image: {
     type: String,
   },
   text: {
     type: String,
-    required: true,
   },
   likes: [],
   comments: [],

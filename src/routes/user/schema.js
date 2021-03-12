@@ -39,7 +39,13 @@ const UserSchema = new Schema({
   pfImage: {
     type: String,
   },
-  friends: [],
+  friendRequest: [],
+  friends: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
   faceRec: {
     type: String,
   },
