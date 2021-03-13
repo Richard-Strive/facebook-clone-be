@@ -8,12 +8,11 @@ const uniqid = require("uniqid");
 
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
-// LOOK ON THE DOCUMENTATION FOR GIVING DYNAMIC FILENAME
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "facebook",
-    format: async (req, file) => "png" || "jpg", // supports promises as well
+    format: async (req, file) => "png" || "jpg",
     public_id: (req, file) => file.originalname,
   },
 });
@@ -38,13 +37,13 @@ route.post("/registration", async (req, res, next) => {
     };
 
     const newUser = new User(theNewUser);
-
     await newUser.save();
 
     const { _id } = newUser;
     res.status(201).send(_id);
   } catch (error) {
     console.log(error);
+    next(error);
   }
 });
 
@@ -64,6 +63,7 @@ route.post("/login", async (req, res, next) => {
     }
   } catch (error) {
     console.log(error);
+    next(error);
   }
 });
 
@@ -73,6 +73,26 @@ route.get("/me", authorize, async (req, res, next) => {
     res.status(200).send(req.user);
   } catch (error) {
     console.log(error);
+    next(error);
+  }
+});
+
+// ADD BIO
+route.post("/add-bio", authorize, async (req, res, next) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { bio: req.body.bio },
+      {
+        useFindAndModify: false,
+        new: true,
+      }
+    );
+    console.log(user);
+    res.status(201).send(user);
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
 });
 
@@ -98,6 +118,7 @@ route.put(
       res.status(200).send(modifiedUser);
     } catch (error) {
       console.log(error);
+      next(error);
     }
   }
 );
@@ -124,6 +145,7 @@ route.put(
       res.status(200).send(modifiedUser);
     } catch (error) {
       console.log(error);
+      next(error);
     }
   }
 );
@@ -143,11 +165,12 @@ route.get("/finduser", authorize, async (req, res, next) => {
     }
   } catch (error) {
     console.log(error);
+    next(error);
   }
 });
 
 // FRIEND REQUEST ROUTE
-route.get("/friend-request/:receiverId", authorize, async (req, res, next) => {
+route.post("/friend-request/:receiverId", authorize, async (req, res, next) => {
   try {
     const user = await User.findByIdAndUpdate(
       req.params.receiverId,
@@ -159,31 +182,86 @@ route.get("/friend-request/:receiverId", authorize, async (req, res, next) => {
         new: true,
       }
     );
+    res.send(user);
   } catch (error) {
     console.log(error);
+    next(error);
   }
 });
 
-// FRIEND ACCEPT REQUEST ROUTE
-// route.get("/friend-accept/", authorize, async (req, res, next) => {
-//   try {
-//   } catch (error) {
-//     console.log(error);
-//   }
-// });
+// ACCEPT FRIEND REQUEST ROUTE
+route.post("/friend-accept/:friendReqId", authorize, async (req, res, next) => {
+  try {
+    // REMOVING ID FROM ACCOUNT OWNER FRIEND REQUEST ARRAY
+    await User.findByIdAndUpdate(
+      req.user.id,
+      {
+        $pull: {
+          friendRequest: mongoose.Types.ObjectId(req.params.friendReqId),
+        },
+      },
+      {
+        useFindAndModify: false,
+        new: true,
+      }
+    );
 
-// ADD POST ON SPECIFIC USER ARRAY
+    // ADD ID TO FRIENDS ARRAY ACCOUNT OWNER
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      {
+        $addToSet: { friends: req.params.friendReqId },
+      },
+      {
+        useFindAndModify: false,
+        new: true,
+      }
+    );
+
+    res.send(user);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
+
+// IGNORE REQUEST
+route.post("/friend-ignore/:friendReqId", authorize, async (req, res, next) => {
+  try {
+    // REMOVING ID FROM ACCOUNT OWNER FRIEND REQUEST ARRAY
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      {
+        $pull: {
+          friendRequest: mongoose.Types.ObjectId(req.params.friendReqId),
+        },
+      },
+      {
+        useFindAndModify: false,
+        new: true,
+      }
+    );
+
+    res.send(user);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
+
+// ADD POST
 route.post(
-  "/post/:userId",
+  "/add-post",
   parser.single("image"),
   authorize,
   async (req, res, next) => {
     try {
-      const theNewPost = { ...req.body, image: req.file.path };
+      const theNewPost = { ...req.body, image: req.file ? req.file.path : "" };
+
       const post = new Post(theNewPost);
       await post.save();
       const user = await User.findByIdAndUpdate(
-        req.params.userId,
+        req.user.id,
         {
           $addToSet: { posts: post._id },
         },
@@ -201,15 +279,15 @@ route.post(
   }
 );
 
-// DELETE POST ON SPECIFIC USER ARRAY
-route.delete("/post/:userId/:postId", authorize, async (req, res, next) => {
+// DELETE POST
+route.delete("/post/:postId", authorize, async (req, res, next) => {
   try {
     // 1 DELETE POST FROM POSTS COLLECTION
     const post = await Post.findByIdAndDelete(req.params.postId);
 
     // 2 DELETE POST FROM ARRAY
     const user = await User.findByIdAndUpdate(
-      req.params.userId,
+      req.user.id,
       {
         $pull: {
           posts: mongoose.Types.ObjectId(req.params.postId),
@@ -234,7 +312,7 @@ route.post("/addcomment/:postId", authorize, async (req, res, next) => {
     const comment = await Post.findByIdAndUpdate(
       req.params.postId,
       {
-        $addToSet: { comments: req.body },
+        $addToSet: { comments: { ...req.body, userRef: req.user.firstName } },
       },
       {
         useFindAndModify: false,
@@ -265,6 +343,7 @@ route.post("/addlikes/:postId", authorize, async (req, res, next) => {
     res.status(201).send(like);
   } catch (error) {
     console.log(error);
+    next(error);
   }
 });
 
@@ -283,6 +362,7 @@ route.post("/refreshToken", async (req, res, next) => {
     // res.send(newTokens);
   } catch (error) {
     console.log(error);
+    next(error);
     const err = new Error(error);
     err.httpStatusCode = 403;
     next(err);

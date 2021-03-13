@@ -48,6 +48,7 @@ server.use(unAuthorizedHandler);
 server.use(catchAllErrorHandler);
 
 console.log(listEndpoints(server));
+console.log(listEndpoints(server).length);
 
 mongoose
   .connect(process.env.MONGO_CONNECTION, {

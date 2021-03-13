@@ -11,7 +11,10 @@ const authorize = async (req, res, next) => {
 
     const user = await User.findOne({
       _id: decoded._id,
-    }).populate("posts");
+    })
+      .populate("friendRequest", ["firstName", "pfImage"])
+      .populate("posts")
+      .populate("friends");
 
     req.token = token;
     req.user = user;
