@@ -54,8 +54,13 @@ route.post("/login", async (req, res, next) => {
 
     const userFound = await User.findByCredentials(lastName, password);
     if (userFound) {
-      const tokens = await authenticate(userFound);
-      res.status(200).send(tokens);
+      // const tokens = await authenticate(userFound);
+      // res.status(200).send(tokens);
+      const { token, refreshToken } = await authenticate(userFound);
+
+      res
+        .cookie("Token", token, { httpOnly: true, path: "/user/me" })
+        .send("ok");
     } else {
       const err = new Error();
       err.httpStatusCode = 404;
@@ -70,6 +75,7 @@ route.post("/login", async (req, res, next) => {
 // PERSONAL PROFILE INFOS
 route.get("/me", authorize, async (req, res, next) => {
   try {
+    console.log(req.cookies);
     res.status(200).send(req.user);
   } catch (error) {
     console.log(error);
@@ -348,26 +354,57 @@ route.post("/addlikes/:postId", authorize, async (req, res, next) => {
 });
 
 //REFRASH TOKEN ROUTE
-route.post("/refreshToken", async (req, res, next) => {
-  // const oldRefreshToken = req.body.refreshToken;
+// route.post("/refreshToken", async (req, res, next) => {
+//   try {
+//     const oldRefreshToken = "HELLO WORLD COOKIE";
 
-  console.log(req.cookies);
-  // if (!oldRefreshToken) {
-  //   const err = new Error("Refresh token missing");
-  //   err.httpStatusCode = 400;
-  //   next(err);
-  // } else {
-  try {
-    // const newTokens = await refreshToken(oldRefreshToken);
-    // res.send(newTokens);
-  } catch (error) {
-    console.log(error);
-    next(error);
-    const err = new Error(error);
-    err.httpStatusCode = 403;
-    next(err);
-  }
-  // }
-});
+//     res.cookie("BISCOTTO-->", oldRefreshToken, {
+//       httpOnly: true,
+//       path: "/user/refreshToken",
+//     });
+//     // testing httpOnly opt: it's used to protect cookies from javascript attack
+
+//     res.send("HELLO WORLD");
+//   } catch (error) {
+//     console.log(error);
+//     next(error);
+//     const err = new Error();
+//     err.httpStatusCode = 403;
+//     next(err);
+//   }
+//   // }
+// });
 
 module.exports = route;
+
+// usersRouter.post("/logout", authorize, async (req, res, next) => {
+//   try {
+//     req.user.refreshTokens = [];
+//     await req.user.save();
+//     res.send();
+//   } catch (error) {
+//     next(error);
+//   }
+// });
+
+// route.post("/refreshToken", async (req, res, next) => {
+//   // const oldRefreshToken = req.body.refreshToken;
+
+//   console.log(req.cookies);
+//   // if (!oldRefreshToken) {
+//   //   const err = new Error("Refresh token missing");
+//   //   err.httpStatusCode = 400;
+//   //   next(err);
+//   // } else {
+//   try {
+//     // const newTokens = await refreshToken(oldRefreshToken);
+//     // res.send(newTokens);
+//   } catch (error) {
+//     console.log(error);
+//     next(error);
+//     const err = new Error(error);
+//     err.httpStatusCode = 403;
+//     next(err);
+//   }
+//   // }
+// });

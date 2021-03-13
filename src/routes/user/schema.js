@@ -69,7 +69,7 @@ const UserSchema = new Schema({
 UserSchema.statics.findByCredentials = async function (lastName, plainPW) {
   const user = await this.findOne({ lastName });
 
-  console.log("this is the user found", user);
+  // console.log("this is the user found", user);
 
   if (user) {
     // const isMatch = await bcrypt.compare(plainPW, user.password);

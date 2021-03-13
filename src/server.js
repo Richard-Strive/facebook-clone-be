@@ -1,13 +1,9 @@
 const express = require("express");
 const cors = require("cors");
-
 const listEndpoints = require("express-list-endpoints");
 const mongoose = require("mongoose");
-
 const cookieParser = require("cookie-parser");
-
 const usersRouter = require("./routes/user/index");
-
 const {
   notFoundHandler,
   forbiddenHandler,
@@ -35,7 +31,7 @@ server.use(cors(corsOptions));
 const port = process.env.PORT;
 
 server.use(express.json());
-server.use(cookieParser());
+server.use(cookieParser()); // to read cookies content
 
 server.use("/user", usersRouter);
 
