@@ -1,6 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const { authenticate, refreshToken } = require("../../tools/auth");
+const { authenticate, refreshTokenG } = require("../../tools/auth");
 const { authorize } = require("../../tools/middleware");
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
@@ -58,6 +58,10 @@ route.post("/login", async (req, res, next) => {
       // res.status(200).send(tokens);
       const { token, refreshToken } = await authenticate(userFound);
 
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        path: "/user/refreshToken",
+      });
       res
         .cookie("Token", token, { httpOnly: true, path: "/user/me" })
         .send("ok");
@@ -353,27 +357,36 @@ route.post("/addlikes/:postId", authorize, async (req, res, next) => {
   }
 });
 
-//REFRASH TOKEN ROUTE
-// route.post("/refreshToken", async (req, res, next) => {
-//   try {
-//     const oldRefreshToken = "HELLO WORLD COOKIE";
+// REFRASH TOKEN ROUTE
+route.post("/refreshToken", async (req, res, next) => {
+  const oldRefreshToken = req.cookies.refreshToken;
 
-//     res.cookie("BISCOTTO-->", oldRefreshToken, {
-//       httpOnly: true,
-//       path: "/user/refreshToken",
-//     });
-//     // testing httpOnly opt: it's used to protect cookies from javascript attack
+  if (!oldRefreshToken) {
+    const err = new Error("Refresh token missing");
+    err.httpStatusCode = 400;
+    next(err);
+  } else {
+    try {
+      const { token, refreshToken } = await refreshTokenG(oldRefreshToken);
+      console.log(refreshToken);
 
-//     res.send("HELLO WORLD");
-//   } catch (error) {
-//     console.log(error);
-//     next(error);
-//     const err = new Error();
-//     err.httpStatusCode = 403;
-//     next(err);
-//   }
-//   // }
-// });
+      res.cookie("Token", token, { httpOnly: true, path: "/user/me" });
+
+      res
+        .cookie("refreshToken", refreshToken, {
+          httpOnly: true,
+          path: "/user/refreshToken",
+        })
+        .send("ok");
+    } catch (error) {
+      console.log(error);
+      next(error);
+      const err = new Error();
+      err.httpStatusCode = 403;
+      next(err);
+    }
+  }
+});
 
 module.exports = route;
 

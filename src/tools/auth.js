@@ -59,7 +59,7 @@ const authenticate = async (user) => {
   }
 };
 
-const refreshToken = async (oldRefreshToken) => {
+const refreshTokenG = async (oldRefreshToken) => {
   /**
    * 1 Verify the validity of inser refresh token and decoded it
    *  remeber the decoded it's simply an object that contains the user id (line 87):
@@ -101,4 +101,4 @@ const refreshToken = async (oldRefreshToken) => {
   return { token: newAccessToken, refreshToken: newRefreshToken };
 };
 
-module.exports = { authenticate, verifyJWT, refreshToken };
+module.exports = { authenticate, verifyJWT, refreshTokenG };
