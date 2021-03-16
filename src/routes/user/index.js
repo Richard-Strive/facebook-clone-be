@@ -79,6 +79,7 @@ route.post("/login", async (req, res, next) => {
 // PERSONAL PROFILE INFOS
 route.get("/me", authorize, async (req, res, next) => {
   try {
+    // aggiornare il socket.id qui
     console.log(req.cookies);
     res.status(200).send(req.user);
   } catch (error) {

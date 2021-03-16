@@ -53,6 +53,12 @@ const newServerForChat = http.createServer(server);
 const io = socket(newServerForChat);
 
 io.on("connection", (socket) => {
+  /**
+   * Find and updated the current user and associate to the user the current socket.id
+   *
+   * Need to add an event handler for when the user disconnects so i can use do some stuff on the frontend
+   */
+
   io.clients((error, clients) => {
     if (error) throw error;
     console.log(clients);
