@@ -4,7 +4,13 @@ const { authenticate, refreshTokenG } = require("../../tools/auth");
 const { authorize } = require("../../tools/middleware");
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
-const uniqid = require("uniqid");
+const io = require("socket.io-client");
+const url = "http://localhost:5000";
+const connOpt = {
+  transports: ["websocket", "polling"],
+};
+
+const socket = io(url, { autoConnect: false }, connOpt);
 
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
@@ -79,9 +85,10 @@ route.post("/login", async (req, res, next) => {
 // PERSONAL PROFILE INFOS
 route.get("/me", authorize, async (req, res, next) => {
   try {
-    // aggiornare il socket.id qui req.user.id
-    console.log(req.cookies);
+    socket.emit("my-id", req.user.id);
+
     res.status(200).send(req.user);
+    socket.connect();
   } catch (error) {
     console.log(error);
     next(error);

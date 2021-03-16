@@ -4,6 +4,7 @@ const listEndpoints = require("express-list-endpoints");
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const usersRouter = require("./routes/user/index");
+const User = require("./routes/user/schema");
 const {
   notFoundHandler,
   forbiddenHandler,
@@ -58,6 +59,22 @@ io.on("connection", (socket) => {
    *
    * Need to add an event handler for when the user disconnects so i can use do some stuff on the frontend
    */
+  socket.on("connect", (socket) => {
+    console.log("Connected!");
+  });
+
+  socket.on("my-id", async (data) => {
+    console.log("gnagna--->", data);
+
+    const user = await User.findByIdAndUpdate(
+      data,
+      { socketId: socket.id },
+      {
+        useFindAndModify: false,
+        new: true,
+      }
+    );
+  });
 
   io.clients((error, clients) => {
     if (error) throw error;
@@ -80,10 +97,6 @@ io.on("connection", (socket) => {
   socket.on("disconnect", async () => {
     socket.broadcast.emit("user disconnected", socket.userID);
   });
-
-  // io.emit("user connected", {
-  //   userID: socket.id,
-  // });
 });
 
 mongoose
