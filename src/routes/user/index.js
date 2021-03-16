@@ -370,7 +370,8 @@ route.post("/logout", authorize, async (req, res, next) => {
   try {
     req.user.refreshTokens = [];
     await req.user.save();
-    res.send();
+    socket.close();
+    res.status(200).send("Your logged out");
   } catch (error) {
     next(error);
   }

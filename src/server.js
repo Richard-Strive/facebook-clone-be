@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const usersRouter = require("./routes/user/index");
 const User = require("./routes/user/schema");
+const Message = require("./routes/message/schema");
 const {
   notFoundHandler,
   forbiddenHandler,
@@ -55,17 +56,17 @@ const io = socket(newServerForChat);
 
 io.on("connection", (socket) => {
   /**
-   * Find and updated the current user and associate to the user the current socket.id
-   *
    * Need to add an event handler for when the user disconnects so i can use do some stuff on the frontend
    */
-  socket.on("connect", (socket) => {
-    console.log("Connected!");
+
+  io.clients((error, clients) => {
+    if (error) throw error;
+    console.log(clients);
+
+    io.emit("clients", clients);
   });
 
   socket.on("my-id", async (data) => {
-    console.log("gnagna--->", data);
-
     const user = await User.findByIdAndUpdate(
       data,
       { socketId: socket.id },
@@ -76,27 +77,19 @@ io.on("connection", (socket) => {
     );
   });
 
-  io.clients((error, clients) => {
-    if (error) throw error;
-    console.log(clients);
-
-    io.emit("clients", clients);
-  });
-
-  socket.broadcast.emit("user connected", {
-    userID: socket.id,
-  });
-
-  socket.on("private message", ({ message, to }) => {
+  socket.on("private message", ({ text, to, sender, receiver }) => {
     socket.to(to).emit("private message", {
-      message,
+      text,
       from: socket.id,
     });
+
+    const newMessage = new Message({ text, sender, receiver });
+    newMessage.save();
   });
 
-  socket.on("disconnect", async () => {
-    socket.broadcast.emit("user disconnected", socket.userID);
-  });
+  // socket.on("disconnect", async () => {
+  //   socket.broadcast.emit("user disconnected", socket.userID);
+  // });
 });
 
 mongoose
