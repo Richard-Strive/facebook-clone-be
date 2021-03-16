@@ -357,6 +357,17 @@ route.post("/addlikes/:postId", authorize, async (req, res, next) => {
   }
 });
 
+// LOG-OUT ROUTE
+route.post("/logout", authorize, async (req, res, next) => {
+  try {
+    req.user.refreshTokens = [];
+    await req.user.save();
+    res.send();
+  } catch (error) {
+    next(error);
+  }
+});
+
 // REFRASH TOKEN ROUTE
 route.post("/refreshToken", async (req, res, next) => {
   const oldRefreshToken = req.cookies.refreshToken;
@@ -389,16 +400,6 @@ route.post("/refreshToken", async (req, res, next) => {
 });
 
 module.exports = route;
-
-// usersRouter.post("/logout", authorize, async (req, res, next) => {
-//   try {
-//     req.user.refreshTokens = [];
-//     await req.user.save();
-//     res.send();
-//   } catch (error) {
-//     next(error);
-//   }
-// });
 
 // route.post("/refreshToken", async (req, res, next) => {
 //   // const oldRefreshToken = req.body.refreshToken;
