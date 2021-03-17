@@ -77,6 +77,10 @@ io.on("connection", (socket) => {
     );
   });
 
+  socket.on("connect", (data) => {
+    console.log(data);
+  });
+
   socket.on("private message", ({ text, to, sender, receiver }) => {
     socket.to(to).emit("private message", {
       text,

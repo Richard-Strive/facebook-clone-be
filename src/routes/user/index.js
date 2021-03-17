@@ -85,10 +85,9 @@ route.post("/login", async (req, res, next) => {
 // PERSONAL PROFILE INFOS
 route.get("/me", authorize, async (req, res, next) => {
   try {
-    socket.emit("my-id", req.user.id);
-
-    res.status(200).send(req.user);
     socket.connect();
+    socket.emit("my-id", req.user.id);
+    res.status(200).send(req.user);
   } catch (error) {
     console.log(error);
     next(error);
