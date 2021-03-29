@@ -4,9 +4,8 @@ const { verifyJWT } = require("./auth");
 
 const authorize = async (req, res, next) => {
   try {
-    // const token = req.header("Authorization").replace("Bearer ", "");
-
-    const token = req.cookies.Token;
+    const token = req.header("Authorization").replace("Bearer ", "");
+    // const token = req.cookies.Token;
     const decoded = await verifyJWT(token);
 
     console.log(`this is the decoded---->${JSON.stringify(decoded)}`);

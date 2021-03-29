@@ -56,25 +56,25 @@ route.post("/registration", async (req, res, next) => {
 // LOGIN
 route.post("/login", async (req, res, next) => {
   try {
-    const { lastName, password } = req.body;
+    const { email, password, userId } = req.body;
 
-    const userFound = await User.findByCredentials(lastName, password);
-    if (userFound) {
-      // const tokens = await authenticate(userFound);
-      // res.status(200).send(tokens);
-      const { token, refreshToken } = await authenticate(userFound);
+    if (email && password) {
+      const userFound = await User.findByCredentials(email, password);
+      console.log(userFound);
 
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        path: "/user/refreshToken",
-      });
-      res
-        .cookie("Token", token, { httpOnly: true, path: "/user/me" })
-        .send("ok");
-    } else {
-      const err = new Error();
-      err.httpStatusCode = 404;
-      next(err);
+      if (userFound) {
+        const tokens = await authenticate(userFound);
+        res.status(200).send(tokens);
+      }
+    }
+
+    if (userId) {
+      const userFound = await User.findOne({ _id: userId });
+      console.log(userFound);
+      if (userFound) {
+        const tokens = await authenticate(userFound);
+        res.status(200).send(tokens);
+      }
     }
   } catch (error) {
     console.log(error);
@@ -430,3 +430,22 @@ module.exports = route;
 //   }
 //   // }
 // });
+
+// FOR LOGIN WITH COOKIES
+//     // if (userFound) {
+//   // const tokens = await authenticate(userFound);
+//   // res.status(200).send(tokens);
+//   const { token, refreshToken } = await authenticate(userFound);
+
+//   res.cookie("refreshToken", refreshToken, {
+//     httpOnly: true,
+//     path: "/user/refreshToken",
+//   });
+//   res
+//     .cookie("Token", token, { httpOnly: true, path: "/user/me" })
+//     .send("ok");
+// } else {
+//   const err = new Error();
+//   err.httpStatusCode = 404;
+//   next(err);
+// }

@@ -1,4 +1,5 @@
 const { Schema, model } = require("mongoose");
+const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 // NEED TO SAVE USER HASHED PASSWORD
 
@@ -27,12 +28,6 @@ const UserSchema = new Schema({
     type: String,
   },
   jobs: [String],
-  birthDay: {
-    type: String,
-  },
-  gender: {
-    type: String,
-  },
   bgImage: {
     type: String,
   },
@@ -66,18 +61,19 @@ const UserSchema = new Schema({
   refreshTokens: [],
 });
 
-UserSchema.statics.findByCredentials = async function (lastName, plainPW) {
-  const user = await this.findOne({ lastName });
+UserSchema.statics.findByCredentials = async function (email, plainPW) {
+  if (email && plainPW) {
+    const user = await this.findOne({ email });
+    // console.log("this is the user found", user);
 
-  // console.log("this is the user found", user);
-
-  if (user) {
-    // const isMatch = await bcrypt.compare(plainPW, user.password);
-    const isMatch = await (plainPW === user.password);
-    if (isMatch) return user;
-    else console.log("Password incorrect");
-  } else {
-    console.log("No user whit this credentials found");
+    if (user) {
+      // const isMatch = await bcrypt.compare(plainPW, user.password);
+      const isMatch = await (plainPW === user.password);
+      if (isMatch) return user;
+      else console.log("Password incorrect");
+    } else {
+      console.log("No user whit this credentials found");
+    }
   }
 };
 
