@@ -7,7 +7,6 @@ const usersRouter = require("./routes/user/index");
 const User = require("./routes/user/schema");
 const Message = require("./routes/message/schema");
 
-//testing
 const {
   notFoundHandler,
   forbiddenHandler,
