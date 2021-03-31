@@ -80,8 +80,6 @@ route.post("/login", async (req, res, next) => {
 // PERSONAL PROFILE INFOS
 route.get("/me", authorize, async (req, res, next) => {
   try {
-    socket.connect();
-    socket.emit("my-id", req.user.id);
     res.status(200).send(req.user);
   } catch (error) {
     console.log(error);
@@ -161,6 +159,30 @@ route.put(
     }
   }
 );
+
+// SET FACE_ID IMAGE
+route.put("/me/add-face-id-image", authorize, async (req, res, next) => {
+  try {
+    const modifiedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        faceRec: req.body.faceId,
+      },
+      {
+        useFindAndModify: false,
+        new: true,
+      }
+    );
+
+    console.log("req.body--->", req.body);
+
+    modifiedUser.save();
+    res.status(200).send(modifiedUser);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
 
 // FIND USER ON THE APP
 route.get("/finduser", authorize, async (req, res, next) => {

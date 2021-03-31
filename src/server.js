@@ -21,6 +21,7 @@ const server = express();
 
 const whitelist = [
   "http://localhost:3000",
+  "http://localhost:3000/home/me",
   "https://murmuring-woodland-01068.herokuapp.com",
 ];
 const corsOptions = {
