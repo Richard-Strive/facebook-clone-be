@@ -4,13 +4,6 @@ const { authenticate, refreshTokenG } = require("../../tools/auth");
 const { authorize } = require("../../tools/middleware");
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
-const io = require("socket.io-client");
-const url = "http://localhost:5000";
-const connOpt = {
-  transports: ["websocket", "polling"],
-};
-
-const socket = io(url, { autoConnect: false }, connOpt);
 
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
@@ -65,6 +58,8 @@ route.post("/login", async (req, res, next) => {
       if (userFound) {
         const tokens = await authenticate(userFound);
         res.status(200).send(tokens);
+      } else {
+        res.status(404).send("No user with this credentials");
       }
     }
 

@@ -19,19 +19,21 @@ const socket = require("socket.io");
 
 const server = express();
 
-const whitelist = ["http://localhost:3000"];
-
+const whitelist = [
+  "http://localhost:3000",
+  "https://murmuring-woodland-01068.herokuapp.com",
+];
 const corsOptions = {
-  origin: (origin, callback) => {
-    if (whitelist.indexOf(origin) !== -1 || !origin) {
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true,
 };
 
+// Then pass them to cors:
 server.use(cors(corsOptions));
 
 const port = process.env.PORT;
