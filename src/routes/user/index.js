@@ -284,7 +284,7 @@ route.post("/friend-ignore/:friendReqId", authorize, async (req, res, next) => {
 });
 
 // ADD POST
-route.post(
+route.put(
   "/add-post",
   parser.single("image"),
   authorize,
