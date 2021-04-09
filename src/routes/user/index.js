@@ -21,6 +21,7 @@ const parser = multer({ storage: storage });
 const User = require("./schema");
 const Comment = require("../comment/schema");
 const Post = require("../post/schema");
+const Message = require("../message/schema");
 const { findByIdAndUpdate } = require("./schema");
 
 const route = express.Router();
@@ -70,6 +71,23 @@ route.post("/login", async (req, res, next) => {
         const tokens = await authenticate(userFound);
         res.status(200).send(tokens);
       }
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
+
+// GET MESSAGE WITH USER
+route.get("/me/messages", authorize, async (req, res, next) => {
+  try {
+    const foundMessages = await Message.find();
+    if (foundMessages) {
+      res.send(foundMessages);
+    } else {
+      const err = new Error("No messages found");
+      err.httpStatusCode = 404;
+      next(err);
     }
   } catch (error) {
     console.log(error);
@@ -185,10 +203,13 @@ route.put("/me/add-face-id-image", authorize, async (req, res, next) => {
 });
 
 // FIND USER ON THE APP
-route.get("/finduser", authorize, async (req, res, next) => {
+route.get("/finduser/:userName", authorize, async (req, res, next) => {
   try {
     const foundUser = await User.findOne({
-      $or: [{ firstName: req.query.q }, { lastName: req.query.q }],
+      $or: [
+        { firstName: req.params.userName },
+        { lastName: req.params.userName },
+      ],
     });
     if (foundUser) {
       res.send(foundUser);
@@ -245,6 +266,18 @@ route.post("/friend-accept/:friendReqId", authorize, async (req, res, next) => {
       req.user.id,
       {
         $addToSet: { friends: req.params.friendReqId },
+      },
+      {
+        useFindAndModify: false,
+        new: true,
+      }
+    );
+
+    // ADD ID TO FRIENDS ARRAY ACCOUNT SENDER
+    const receiverUser = await User.findByIdAndUpdate(
+      req.params.friendReqId,
+      {
+        $addToSet: { friends: req.user.id },
       },
       {
         useFindAndModify: false,

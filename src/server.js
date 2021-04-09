@@ -22,8 +22,10 @@ const server = express();
 const whitelist = [
   "http://localhost:3000",
   "http://localhost:3000/home/me",
+  "http://localhost:3000/home/main",
   "https://murmuring-woodland-01068.herokuapp.com",
 ];
+
 const corsOptions = {
   origin: function (origin, callback) {
     if (whitelist.indexOf(origin) !== -1) {
@@ -58,6 +60,8 @@ console.log(listEndpoints(server).length);
 const newServerForChat = http.createServer(server);
 const io = socket(newServerForChat);
 
+let connectedUser = null;
+
 io.on("connection", (socket) => {
   /**
    * Need to add an event handler for when the user disconnects so i can use do some stuff on the frontend
@@ -65,9 +69,23 @@ io.on("connection", (socket) => {
 
   io.clients((error, clients) => {
     if (error) throw error;
-    console.log(clients);
+    console.log("this are the people connected--->", clients);
+    connectedUser = clients;
 
-    io.emit("clients", clients);
+    io.on("connect", (socket) => {
+      console.log("Someone connected", clients);
+      connectedUser = clients;
+
+      io.emit(connectedUser);
+    });
+
+    // io.on("disconnect", (socket) => {
+    //   console.log("Someone disconnected", clients);
+    // });
+
+    io.sockets.emit("list", connectedUser);
+
+    // io.emit("clients", clients);
   });
 
   socket.on("my-id", async (data) => {
@@ -79,11 +97,13 @@ io.on("connection", (socket) => {
         new: true,
       }
     );
-  });
-
-  socket.on("connect", (data) => {
     console.log(data);
   });
+
+  // socket.on("connect", (data) => {
+  //   console.log("this are the people connected", data);
+  //   io.emit("connect", data);
+  // });
 
   socket.on("private message", ({ text, to, sender, receiver }) => {
     socket.to(to).emit("private message", {
